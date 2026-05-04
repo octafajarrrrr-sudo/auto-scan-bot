@@ -214,7 +214,9 @@ class CryptoBiasAnalyzer:
             mcap     = float(fund.get("mcap") or 0) or 1
             fdv      = float(fund.get("fdv") or mcap)
             fdv_r    = fdv / mcap if mcap > 0 else 1
-            vol_mcap = (float(ticker.get("vol") or 0) / mcap * 100) if mcap > 0 else 0
+            # vol: spot quoteVolume (USD) — proxy yang cukup untuk MCap ratio
+            raw_vol  = float(ticker.get("vol") or ticker.get("quoteVolume") or 0)
+            vol_mcap = (raw_vol / mcap * 100) if mcap > 0 else 0
             rs_diff  = ticker["change"] - ticker["btc_change"]
 
             if is_long:
@@ -225,9 +227,11 @@ class CryptoBiasAnalyzer:
             l6 = 1 if sum(conds) >= 2 else 0
         bd["L6_fundamental"] = l6
 
-        # ── L7: On-Chain DeFi (0-1, -99 blocker sudah di luar) ────────
+        # ── L7: On-Chain DeFi (0-1) ──────────────────────────────────
         defi_score, _ = score_defi_confluence(defi_ctx, direction)
-        l7 = max(0, min(1, defi_score))
+        # -99 = token unlock hard blocker; sudah dicek di analyze() dan quick_scan()
+        # Di sini normalkan ke 0 saja (trade sudah diblokir sebelum sampai sini)
+        l7 = max(0, min(1, defi_score if defi_score != -99 else 0))
         bd["L7_defi"] = l7
 
         # ── L8: Sentiment (0-1) ───────────────────────────────────────
@@ -285,14 +289,15 @@ class CryptoBiasAnalyzer:
         return "\n".join(lines)
 
     def analyze(self, symbol: str, precomputed_tech=None,
-                precomputed_defi=None, precomputed_sent=None) -> str:
+                precomputed_defi=None, precomputed_sent=None,
+                precomputed_ticker=None, precomputed_fund=None) -> str:
         symbol = symbol.upper()
-        ticker = self.get_binance_ticker(symbol)
+        ticker = precomputed_ticker or self.get_binance_ticker(symbol)
         if not ticker:
             return f"❌ {symbol}/USDT tidak ditemukan di Binance."
         ticker["symbol"] = symbol
 
-        fund   = self.get_fundamental_data(symbol)
+        fund   = precomputed_fund if precomputed_fund is not None else self.get_fundamental_data(symbol)
         news   = self.scraper.get_catalysts(symbol)
         tech   = (precomputed_tech
                   if precomputed_tech is not None
@@ -673,6 +678,8 @@ Invalidasi : Close di bawah ${ticker['low']:.5f}
             precomputed_tech=tech,
             precomputed_defi=defi_ctx,
             precomputed_sent=sent_ctx,
+            precomputed_ticker=ticker,
+            precomputed_fund=fund,
         )
         return report, direction, score
 
