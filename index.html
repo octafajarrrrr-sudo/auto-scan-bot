@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Signal Dashboard</title>
+<style>
+:root{--bg:#08080e;--surface:#0e0e18;--card:#13131f;--border:#1d1d2e;--accent:#7c6fcd;--accent2:#5e9cf5;--green:#3dd68c;--red:#f25f5c;--amber:#f5a623;--text:#e2e2ef;--muted:#6b6b8a;--r:8px;--font:'Inter',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;min-height:100vh}
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100}
+.logo{font-size:14px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.nav-right{display:flex;align-items:center;gap:16px;font-size:12px;color:var(--muted)}
+.tabs{display:flex;border-bottom:1px solid var(--border);padding:0 24px;background:var(--surface)}
+.tab{padding:12px 18px;font-size:12.5px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.tab:hover{color:var(--text)}.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.page{display:none;padding:20px 24px}.page.active{display:block}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+@media(max-width:1000px){.g4{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);opacity:.4}
+.sl{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+.sv{font-size:26px;font-weight:700;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.ss{font-size:11px;color:var(--muted)}
+.g{color:var(--green)}.r{color:var(--red)}.a{color:var(--amber)}.ac{color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+.ch{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.ct{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+.tbl-wrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{padding:9px 12px;text-align:left;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);border-bottom:1px solid var(--border)}
+.tbl td{padding:10px 12px;border-bottom:1px solid #131320;font-size:12.5px;font-variant-numeric:tabular-nums}
+.tbl tbody tr:last-child td{border-bottom:none}
+.tbl tbody tr:hover td{background:rgba(124,111,205,.04)}
+.bl{background:rgba(61,214,140,.12);color:var(--green);padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600}
+.bs{background:rgba(242,95,92,.12);color:var(--red);padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600}
+.brun{background:rgba(94,156,245,.12);color:var(--accent2);padding:2px 7px;border-radius:4px;font-size:11px}
+.bw{background:rgba(61,214,140,.1);color:var(--green);padding:2px 7px;border-radius:4px;font-size:11px}
+.bloss{background:rgba(242,95,92,.1);color:var(--red);padding:2px 7px;border-radius:4px;font-size:11px}
+.bcan{background:rgba(107,107,138,.1);color:var(--muted);padding:2px 7px;border-radius:4px;font-size:11px}
+.pills{display:flex;gap:6px;padding:10px 16px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.pill{background:var(--border);color:var(--muted);border:none;padding:4px 12px;border-radius:20px;font-size:11.5px;cursor:pointer;font-family:var(--font);transition:all .2s}
+.pill:hover,.pill.active{background:var(--accent);color:#fff}
+.btn{background:var(--border);color:var(--muted);border:1px solid var(--border);padding:3px 9px;border-radius:4px;font-size:11px;cursor:pointer;font-family:var(--font);transition:all .2s}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+#equity-canvas{width:100%;height:180px;display:block}
+.scan-item{padding:12px 16px;border-bottom:1px solid #131320;display:flex;justify-content:space-between;align-items:flex-start}
+.scan-item:last-child{border-bottom:none}
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.chip{background:rgba(124,111,205,.15);color:var(--accent);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.perf-row{display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid #131320}
+.perf-row:last-child{border-bottom:none}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:26px;width:340px;max-width:95vw}
+.modal h3{font-size:15px;margin-bottom:16px}
+.modal label{display:block;color:var(--muted);font-size:11px;margin:12px 0 4px;text-transform:uppercase;letter-spacing:.6px}
+.modal select,.modal input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-size:13px;font-family:var(--font);outline:none}
+.modal select:focus,.modal input:focus{border-color:var(--accent)}
+.mbtns{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
+.bsave{background:var(--accent);color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-family:var(--font);font-weight:600}
+.bcancel{background:var(--border);color:var(--muted);border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-family:var(--font)}
+.empty{text-align:center;padding:32px;color:var(--muted)}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:16px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><div class="dot"></div>Signal Dashboard</div>
+  <div class="nav-right">
+    <span>Intraday H4/H1/M15</span>
+    <span id="clock">--:--:--</span>
+    <span id="upd">—</span>
+  </div>
+</nav>
+<div class="tabs">
+  <div class="tab active" data-page="overview">Overview</div>
+  <div class="tab" data-page="positions">Positions</div>
+  <div class="tab" data-page="journal">Journal</div>
+  <div class="tab" data-page="scans">Scan History</div>
+  <div class="tab" data-page="performance">Performance</div>
+</div>
+
+<!-- OVERVIEW -->
+<div id="page-overview" class="page active">
+  <div class="g4">
+    <div class="stat"><div class="sl">Winrate</div><div class="sv g" id="s-wr">—</div><div class="ss" id="s-wl">— W / — L</div></div>
+    <div class="stat"><div class="sl">Total PnL</div><div class="sv" id="s-tp">—</div><div class="ss" id="s-cl">—</div></div>
+    <div class="stat"><div class="sl">Expectancy</div><div class="sv" id="s-ex">—</div><div class="ss">per trade</div></div>
+    <div class="stat"><div class="sl">Running</div><div class="sv ac" id="s-ru">0</div><div class="ss">posisi aktif</div></div>
+    <div class="stat"><div class="sl">Avg Win</div><div class="sv g" id="s-aw">—</div><div class="ss">per winning trade</div></div>
+    <div class="stat"><div class="sl">Avg Loss</div><div class="sv r" id="s-al">—</div><div class="ss">per losing trade</div></div>
+    <div class="stat"><div class="sl">Profit Factor</div><div class="sv" id="s-pf">—</div><div class="ss">gross win/loss</div></div>
+    <div class="stat"><div class="sl">Best Streak</div><div class="sv a" id="s-ms">—</div><div class="ss" id="s-cs">current —</div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><span class="ct">Equity Curve</span><span id="eq-n" style="font-size:11px;color:var(--muted)"></span></div>
+      <div style="padding:12px 16px"><canvas id="equity-canvas"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ch"><span class="ct">Symbol Leaders</span></div>
+      <div id="sym-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- POSITIONS -->
+<div id="page-positions" class="page">
+  <div class="card">
+    <div class="ch"><span class="ct">Running Positions</span><span id="pc" class="brun">0</span></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>#</th><th>Symbol</th><th>Bias</th><th>Entry</th><th>Live</th><th>PnL%</th><th>SL</th><th>TP1</th><th>TP2</th><th>RR</th><th>Opened</th><th>Action</th></tr></thead>
+      <tbody id="pos-body"><tr><td colspan="12" class="empty">Tidak ada posisi aktif</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- JOURNAL -->
+<div id="page-journal" class="page">
+  <div class="card">
+    <div class="ch"><span class="ct">Trade Journal</span><span id="jc" style="font-size:11px;color:var(--muted)">0</span></div>
+    <div class="pills">
+      <button class="pill active" onclick="setF('ALL',this)">Semua</button>
+      <button class="pill" onclick="setF('RUNNING',this)">Running</button>
+      <button class="pill" onclick="setF('WIN',this)">Win</button>
+      <button class="pill" onclick="setF('LOSS',this)">Loss</button>
+      <button class="pill" onclick="setF('LONG',this)">Long</button>
+      <button class="pill" onclick="setF('SHORT',this)">Short</button>
+    </div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>#</th><th>Waktu</th><th>Symbol</th><th>Dir</th><th>Entry</th><th>SL</th><th>TP1</th><th>TP2</th><th>SL%</th><th>RR</th><th>Score</th><th>Status</th><th>Exit</th><th>PnL%</th><th>Act</th></tr></thead>
+      <tbody id="jnl-body"><tr><td colspan="15" class="empty">Memuat...</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- SCANS -->
+<div id="page-scans" class="page">
+  <div class="card">
+    <div class="ch"><span class="ct">Scan History</span></div>
+    <div id="scan-list"><div class="empty">Belum ada scan</div></div>
+  </div>
+</div>
+
+<!-- PERFORMANCE -->
+<div id="page-performance" class="page">
+  <div class="card">
+    <div class="ch"><span class="ct">Performance per Symbol</span></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Symbol</th><th>Total</th><th>Win</th><th>Loss</th><th>WR%</th><th>Avg PnL</th><th>Total PnL</th></tr></thead>
+      <tbody id="perf-body"><tr><td colspan="7" class="empty">Belum ada data</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <h3>Update Signal #<span id="m-disp"></span></h3>
+    <input type="hidden" id="m-id">
+    <label>Status</label>
+    <select id="m-st">
+      <option value="WIN_TP1">WIN TP1</option><option value="WIN_TP2">WIN TP2</option>
+      <option value="WIN_TP3">WIN TP3</option><option value="LOSS">LOSS</option>
+      <option value="CANCELLED">Cancelled</option>
+    </select>
+    <label>Exit Price</label><input type="number" id="m-ep" step="any" placeholder="0.00000">
+    <label>Catatan</label><input type="text" id="m-nt" placeholder="...">
+    <div class="mbtns">
+      <button class="bcancel" onclick="closeM()">Batal</button>
+      <button class="bsave" onclick="saveM()">Simpan</button>
+    </div>
+  </div>
+</div>
+<footer>Signal Dashboard · 15s refresh · Background price check 60s</footer>
+
+<script>
+let allSigs=[], prices={}, jFilter='ALL';
+// Clock
+setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('id-ID',{hour12:false})},1000);
+// Tabs
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  this.classList.add('active');
+  document.getElementById('page-'+this.dataset.page).classList.add('active');
+}));
+// Fetch
+async function fetchAll(){
+  try{
+    const [stats,sigs,run,scans,eq,perf,px]=await Promise.all([
+      fetch('/api/stats').then(r=>r.json()),
+      fetch('/api/signals?limit=200').then(r=>r.json()),
+      fetch('/api/running').then(r=>r.json()),
+      fetch('/api/scans').then(r=>r.json()),
+      fetch('/api/equity').then(r=>r.json()),
+      fetch('/api/performance').then(r=>r.json()),
+      fetch('/api/prices').then(r=>r.json()),
+    ]);
+    prices=px; allSigs=sigs;
+    rStats(stats); rPos(run,px); rJnl(allSigs);
+    rScans(scans); rEquity(eq); rSymList(perf); rPerfTable(perf);
+    document.getElementById('upd').textContent='↻ '+new Date().toLocaleTimeString('id-ID',{hour12:false});
+  }catch(e){console.error(e)}
+}
+// Stats
+function rStats(s){
+  const wr=s.winrate_pct||0,tp=s.total_pnl_pct||0,ex=s.expectancy||0;
+  set('s-wr',wr+'%',wr>=50?'g':'r');
+  set('s-tp',(tp>=0?'+':'')+tp+'%',tp>=0?'g':'r');
+  set('s-ex',(ex>=0?'+':'')+ex+'%',ex>=0?'g':'r');
+  set('s-ru',s.running_positions||0,'ac');
+  set('s-aw','+'+(s.avg_win_pct||0)+'%','g');
+  set('s-al',(s.avg_loss_pct||0)+'%','r');
+  set('s-pf',s.profit_factor||0,(s.profit_factor||0)>=1?'g':'r');
+  set('s-ms',s.max_streak||0,'a');
+  txt('s-wl',(s.wins||0)+' W / '+(s.losses||0)+' L');
+  txt('s-cl',(s.total_closed||0)+' closed');
+  txt('s-cs','current '+(s.current_streak||0));
+}
+function set(id,v,cls){const e=document.getElementById(id);e.textContent=v;e.className='sv '+(cls||'')}
+function txt(id,v){const e=document.getElementById(id);if(e)e.textContent=v}
+// Positions
+function rPos(rows,px){
+  txt('pc',rows.length);
+  const tb=document.getElementById('pos-body');
+  if(!rows.length){tb.innerHTML='<tr><td colspan="12" class="empty">Tidak ada posisi aktif</td></tr>';return}
+  tb.innerHTML=rows.map(r=>{
+    const lv=px[r.symbol],lp=lv?'$'+fmt(lv.price):'—';
+    const pnl=lv?lv.pnl_pct:null;
+    const ps=pnl!=null?`<span class="${pnl>=0?'g':'r'}">${pnl>=0?'+':''}${pnl}%</span>`:'—';
+    return `<tr><td style="color:var(--muted)">#${r.id}</td><td><b>${r.symbol}</b></td>
+    <td>${badge(r.bias)}</td><td>$${fmt(r.entry)}</td>
+    <td style="color:var(--accent2)">${lp}</td><td>${ps}</td>
+    <td style="color:var(--red)">$${fmt(r.sl)}</td>
+    <td>$${fmt(r.tp1)}</td><td style="color:var(--green)">$${fmt(r.tp2)}</td>
+    <td><span class="brun">${r.rr}</span></td>
+    <td style="color:var(--muted);font-size:11px">${fd(r.ts)}</td>
+    <td><button class="btn" onclick="openM(${r.id})">Update</button></td></tr>`;
+  }).join('');
+}
+// Journal
+function setF(f,el){
+  jFilter=f;
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  rJnl(allSigs);
+}
+function rJnl(rows){
+  let f=rows;
+  if(jFilter==='RUNNING')f=rows.filter(r=>r.status==='RUNNING');
+  else if(jFilter==='WIN')f=rows.filter(r=>r.status&&r.status.startsWith('WIN'));
+  else if(jFilter==='LOSS')f=rows.filter(r=>r.status==='LOSS');
+  else if(jFilter==='LONG')f=rows.filter(r=>r.bias&&r.bias.includes('LONG'));
+  else if(jFilter==='SHORT')f=rows.filter(r=>r.bias&&r.bias.includes('SHORT'));
+  txt('jc',f.length+' sinyal');
+  const tb=document.getElementById('jnl-body');
+  if(!f.length){tb.innerHTML='<tr><td colspan="15" class="empty">Tidak ada data</td></tr>';return}
+  tb.innerHTML=f.map(r=>{
+    const sb=r.status==='RUNNING'?'<span class="brun">Running</span>':
+      r.status&&r.status.startsWith('WIN')?`<span class="bw">${r.status.replace('WIN_','')}</span>`:
+      r.status==='LOSS'?'<span class="bloss">Loss</span>':'<span class="bcan">—</span>';
+    const pnl=r.pnl_pct!=null?`<span class="${r.pnl_pct>=0?'g':'r'}">${r.pnl_pct>=0?'+':''}${r.pnl_pct}%</span>`:'—';
+    const act=r.status==='RUNNING'?`<button class="btn" onclick="openM(${r.id})">Update</button>`:'—';
+    const sm=(r.confidence||'').match(/(\d+)\/12/);
+    return `<tr><td style="color:var(--muted)">#${r.id}</td>
+    <td style="color:var(--muted);font-size:11px;white-space:nowrap">${fd(r.ts)}</td>
+    <td><b>${r.symbol}</b></td><td>${badge(r.bias)}</td>
+    <td>$${fmt(r.entry)}</td><td style="color:var(--red)">$${fmt(r.sl)}</td>
+    <td>$${fmt(r.tp1)}</td><td style="color:var(--green)">$${fmt(r.tp2)}</td>
+    <td>${r.sl_pct}%</td><td>${r.rr}</td>
+    <td>${sm?sm[1]+'/12':'—'}</td>
+    <td>${sb}</td><td>${r.exit_price?'$'+fmt(r.exit_price):'—'}</td>
+    <td>${pnl}</td><td>${act}</td></tr>`;
+  }).join('');
+}
+// Scans
+function rScans(scans){
+  const el=document.getElementById('scan-list');
+  if(!scans.length){el.innerHTML='<div class="empty">Belum ada scan</div>';return}
+  el.innerHTML=scans.map(s=>{
+    const chips=(s.top_symbols||[]).map(sym=>`<span class="chip">${sym}</span>`).join('');
+    return `<div class="scan-item">
+      <div><div style="font-weight:600">${fd(s.ts)}</div>
+      <div style="color:var(--muted);font-size:11px;margin-top:2px">${s.total_scanned} koin · <span class="g">${s.signals_found} sinyal</span></div>
+      <div class="chips">${chips||'<span style="color:var(--muted);font-size:11px">no signal</span>'}</div></div>
+    </div>`;
+  }).join('');
+}
+// Equity
+function rEquity(data){
+  const cv=document.getElementById('equity-canvas');
+  const ctx=cv.getContext('2d');
+  const W=cv.offsetWidth||500,H=180;
+  cv.width=W;cv.height=H;ctx.clearRect(0,0,W,H);
+  if(!data||!data.length){
+    ctx.fillStyle='var(--muted)';ctx.font='13px Inter';ctx.textAlign='center';
+    ctx.fillText('Belum ada data equity',W/2,H/2);return;
+  }
+  txt('eq-n',data.length+' trades');
+  const vals=data.map(d=>d.cumulative);
+  const mn=Math.min(0,...vals),mx=Math.max(...vals,0.01);
+  const pad=20,pw=W-pad*2,ph=H-pad*2;
+  const tx=i=>(i/(data.length-1||1))*pw+pad;
+  const ty=v=>ph-(((v-mn)/(mx-mn||1))*ph)+pad;
+  ctx.strokeStyle='rgba(255,255,255,.07)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pad,ty(0));ctx.lineTo(W-pad,ty(0));ctx.stroke();
+  const gr=ctx.createLinearGradient(0,pad,0,H-pad);
+  gr.addColorStop(0,'rgba(61,214,140,.22)');gr.addColorStop(1,'rgba(61,214,140,.02)');
+  ctx.beginPath();ctx.moveTo(tx(0),ty(vals[0]));
+  data.forEach((d,i)=>ctx.lineTo(tx(i),ty(d.cumulative)));
+  ctx.lineTo(tx(data.length-1),H-pad);ctx.lineTo(pad,H-pad);ctx.closePath();
+  ctx.fillStyle=gr;ctx.fill();
+  ctx.strokeStyle='#3dd68c';ctx.lineWidth=2;ctx.lineJoin='round';
+  ctx.beginPath();data.forEach((d,i)=>i===0?ctx.moveTo(tx(i),ty(d.cumulative)):ctx.lineTo(tx(i),ty(d.cumulative)));
+  ctx.stroke();
+  data.forEach((d,i)=>{if(!d.win){ctx.beginPath();ctx.arc(tx(i),ty(d.cumulative),3,0,Math.PI*2);ctx.fillStyle='#f25f5c';ctx.fill()}});
+  const last=vals[vals.length-1];
+  ctx.fillStyle=last>=0?'#3dd68c':'#f25f5c';ctx.font='bold 12px Inter';ctx.textAlign='right';
+  ctx.fillText((last>=0?'+':'')+last+'%',W-pad,pad+13);
+}
+// Symbol leaders
+function rSymList(data){
+  const el=document.getElementById('sym-list');
+  if(!data||!data.length){el.innerHTML='<div class="empty">Belum ada data</div>';return}
+  const mx=Math.max(...data.map(d=>Math.abs(d.total_pnl||0)),1);
+  el.innerHTML=data.slice(0,8).map(d=>{
+    const pos=d.total_pnl>=0,w=Math.round(Math.abs(d.total_pnl)/mx*100);
+    const wr=d.total>0?Math.round(d.wins/d.total*100):0;
+    return `<div class="perf-row">
+      <span style="font-weight:700;width:55px">${d.symbol}</span>
+      <div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${w}%;background:${pos?'var(--green)':'var(--red)'};border-radius:3px"></div>
+      </div>
+      <span style="width:60px;text-align:right;font-size:12px;color:${pos?'var(--green)':'var(--red)'}">${pos?'+':''}${d.total_pnl}%</span>
+      <span style="color:var(--muted);font-size:11px;width:35px;text-align:right">${wr}%</span>
+    </div>`;
+  }).join('');
+}
+// Perf table
+function rPerfTable(data){
+  const tb=document.getElementById('perf-body');
+  if(!data||!data.length){tb.innerHTML='<tr><td colspan="7" class="empty">Belum ada data</td></tr>';return}
+  tb.innerHTML=data.map(d=>{
+    const wr=d.total>0?Math.round(d.wins/d.total*100):0;
+    const ap=d.avg_pnl||0,tp=d.total_pnl||0;
+    return `<tr><td><b>${d.symbol}</b></td><td>${d.total}</td>
+    <td class="g">${d.wins}</td><td class="r">${d.losses}</td>
+    <td class="${wr>=50?'g':'r'}">${wr}%</td>
+    <td class="${ap>=0?'g':'r'}">${ap>=0?'+':''}${ap}%</td>
+    <td class="${tp>=0?'g':'r'}">${tp>=0?'+':''}${tp}%</td></tr>`;
+  }).join('');
+}
+// Modal
+function openM(id){
+  document.getElementById('m-id').value=id;
+  document.getElementById('m-disp').textContent=id;
+  document.getElementById('m-ep').value='';
+  document.getElementById('m-nt').value='';
+  document.getElementById('modal').classList.add('open');
+}
+function closeM(){document.getElementById('modal').classList.remove('open')}
+async function saveM(){
+  const id=document.getElementById('m-id').value;
+  const st=document.getElementById('m-st').value;
+  const ep=document.getElementById('m-ep').value;
+  const nt=document.getElementById('m-nt').value;
+  await fetch('/api/update',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:parseInt(id),status:st,exit_price:ep?parseFloat(ep):null,notes:nt})});
+  closeM();fetchAll();
+}
+// Utils
+function badge(b){return b&&b.includes('LONG')?'<span class="bl">L</span>':'<span class="bs">S</span>'}
+function fmt(n){
+  if(n==null||n===0)return '—';
+  const v=Number(n);
+  if(v>=10000)return v.toLocaleString('id-ID',{maximumFractionDigits:2});
+  if(v>=1)return v.toFixed(4);
+  return v.toFixed(6);
+}
+function fd(ts){
+  if(!ts)return '—';
+  try{const d=new Date(ts);return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',hour12:false})}
+  catch(e){return(ts||'').slice(0,16)}
+}
+fetchAll();setInterval(fetchAll,15000);
+</script>
+</body>
+</html>
