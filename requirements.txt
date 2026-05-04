@@ -1,6 +1,0 @@
-ccxt>=4.4.50
-requests==2.32.3
-python-telegram-bot[job-queue]==21.10
-pandas==2.2.3
-numpy==2.2.2
-flask>=3.0.0
