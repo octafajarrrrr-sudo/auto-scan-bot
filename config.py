@@ -10,8 +10,8 @@
 #   3. Futures public  → Funding Rate, OI, Taker Ratio (tidak butuh key)
 #   Note: Public market data tidak butuh key; key digunakan untuk rate limit
 #         upgrade dan jika bot dikembangkan untuk order execution.
-BINANCE_API_KEY    = "i7f3xTKimodq6JutGEwAmHRenEzUly9Dlikk3B7571kb8Bdxf7RmdeIlQU9O8uzE"
-BINANCE_SECRET_KEY = "SlIOLtaPMYYOe0FAfono8K3wkuCaxbmRDKAcAWJDnMLHKkAGYcQMUDDTAy4KlazI"
+BINANCE_API_KEY    = "......."
+BINANCE_SECRET_KEY = "......."
 
 # ── COINMARKETCAP ────────────────────────────────────────────────────────────
 # Fungsi:
@@ -19,14 +19,14 @@ BINANCE_SECRET_KEY = "SlIOLtaPMYYOe0FAfono8K3wkuCaxbmRDKAcAWJDnMLHKkAGYcQMUDDTAy
 #   2. /global-metrics/quotes/latest     → Total MarketCap, BTC dominance (regime)
 #   3. /cryptocurrency/trending/latest   → Trending coins (sentiment)
 #   Fallback: CoinGecko free API
-CMC_API_KEY = "f3d1653444ba431e888fb7e9bde3b8b0"
+CMC_API_KEY = "........."
 
 # ── TELEGRAM ─────────────────────────────────────────────────────────────────
 # Fungsi:
 #   TELEGRAM_BOT_TOKEN → autentikasi bot ke Telegram API
 #   TELEGRAM_CHAT_ID   → whitelist akses, hanya pemilik yang bisa pakai
-TELEGRAM_BOT_TOKEN = "8737866685:AAFYasxC_pV6cK73YPZl-Ix_iyPd33OyH-Y"
-TELEGRAM_CHAT_ID   = "6540284368"
+TELEGRAM_BOT_TOKEN = "........"
+TELEGRAM_CHAT_ID   = "........"
 
 # ── DEFILLAMA ────────────────────────────────────────────────────────────────
 # Fungsi: TVL, DEX volume, stablecoin flows, token unlocks, hacks, bridges
