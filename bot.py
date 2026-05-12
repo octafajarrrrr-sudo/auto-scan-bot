@@ -633,4 +633,23 @@ async def post_init(app):
     ])
 
 if __name__ == "__main__":
-    pass
+    import asyncio
+    from config import TELEGRAM_BOT_TOKEN
+
+    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).post_init(post_init).build()
+
+    # Tambahkan handler-handler yang sudah didefinisikan di atas
+    app.add_handler(CommandHandler("start", cmd_start))
+    app.add_handler(CommandHandler("analyze", cmd_analyze))
+    app.add_handler(CommandHandler("backtest", cmd_backtest))
+    app.add_handler(CommandHandler("closepapr", cmd_closepapr))
+
+    # CallbackQueryHandler untuk navigasi menu & aksi
+    # (pattern bisa disesuaikan, pastikan semuanya tertangkap)
+    app.add_handler(CallbackQueryHandler(handle_callback))
+
+    # Conversation handler untuk input free-text
+    app.add_handler(conv)
+
+    # Jalankan bot (blocking)
+    app.run_polling()
