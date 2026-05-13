@@ -552,7 +552,7 @@ async def _run_scan(bot, chat_id, full=False):
     cfg       = cfg_load()
     min_mcap  = cfg["min_mcap_usd"]
     top_n     = cfg["top_n_signals"]
-    min_score = max(cfg["min_score"], HIGH_THRESH)  # never go below HIGH_THRESH
+    min_score = max(cfg["min_score"]
 
     await bot.send_message(chat_id=chat_id,
         text=f"📋 Scan Futures USDT Perp (MCap ≥ `${min_mcap/1e6:.0f}M`)...",
