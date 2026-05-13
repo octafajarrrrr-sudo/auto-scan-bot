@@ -44,7 +44,7 @@ async def edit_or_new(q, text, kb=None, pm="Markdown"):
     except Exception:
         await q.message.reply_text(text, reply_markup=markup, parse_mode=pm)
 
-def back(dest): return [[InlineKeyboardButton("« Kembali", callback_data=dest)]]
+def back(dest): return [InlineKeyboardButton("« Kembali", callback_data=dest)]
 
 # ══════════════════════════════════════════════════════════════════════════════
 # KEYBOARD BUILDERS
