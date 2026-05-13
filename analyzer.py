@@ -315,7 +315,7 @@ class CryptoBiasAnalyzer:
                 precomputed_defi=None, precomputed_sent=None,
                 precomputed_ticker=None, precomputed_fund=None,
                 precomputed_whale=None) -> str:
-        symbol = symbol.upper()
+        symbol = symbol.upper().replace("/USDT", "")
         ticker = precomputed_ticker or await self.get_binance_ticker(symbol)
         if not ticker:
             return f"❌ {symbol}/USDT tidak ditemukan di Binance."
@@ -630,7 +630,7 @@ Invalidasi : Close di bawah ${ticker['low']:.5f}
         """
         _SKIP = (None, "SKIP", 0, {}, {}, {}, {})
 
-        symbol = symbol.upper()
+        symbol = symbol.upper().replace("/USDT", "")
         ticker = await self.get_binance_ticker(symbol)
         if not ticker:
             return _SKIP
