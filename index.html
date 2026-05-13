@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Signal Dashboard</title>
+<style>
+:root{--bg:#08080e;--surface:#0e0e18;--card:#13131f;--border:#1d1d2e;--accent:#7c6fcd;--accent2:#5e9cf5;--green:#3dd68c;--red:#f25f5c;--amber:#f5a623;--cyan:#22d3ee;--text:#e2e2ef;--muted:#6b6b8a;--r:8px;--font:'Inter',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;min-height:100vh}
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100}
+.logo{font-size:14px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.nav-right{display:flex;align-items:center;gap:16px;font-size:12px;color:var(--muted)}
+.tabs{display:flex;border-bottom:1px solid var(--border);padding:0 24px;background:var(--surface);overflow-x:auto}
+.tab{padding:12px 18px;font-size:12.5px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.tab:hover{color:var(--text)}.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab.paper.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+.page{display:none;padding:20px 24px}.page.active{display:block}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+@media(max-width:1000px){.g4{grid-template-columns:1fr 1fr}.g2,.g3{grid-template-columns:1fr}}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);opacity:.4}
+.stat.paper-stat::before{background:var(--cyan)}
+.sl{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+.sv{font-size:26px;font-weight:700;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.ss{font-size:11px;color:var(--muted)}
+.g{color:var(--green)}.r{color:var(--red)}.a{color:var(--amber)}.ac{color:var(--accent)}.cy{color:var(--cyan)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+.card.paper-card{border-color:rgba(34,211,238,.15)}
+.ch{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.ct{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+.ct.paper-title{color:var(--cyan)}
+.tbl-wrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{padding:9px 12px;text-align:left;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);border-bottom:1px solid var(--border)}
+.tbl td{padding:10px 12px;border-bottom:1px solid #131320;font-size:12.5px;font-variant-numeric:tabular-nums}
+.tbl tbody tr:last-child td{border-bottom:none}
+.tbl tbody tr:hover td{background:rgba(124,111,205,.04)}
+.bl{background:rgba(61,214,140,.12);color:var(--green);padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600}
+.bs{background:rgba(242,95,92,.12);color:var(--red);padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600}
+.brun{background:rgba(94,156,245,.12);color:var(--accent2);padding:2px 7px;border-radius:4px;font-size:11px}
+.bopen{background:rgba(34,211,238,.12);color:var(--cyan);padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600}
+.bw{background:rgba(61,214,140,.1);color:var(--green);padding:2px 7px;border-radius:4px;font-size:11px}
+.bw2{background:rgba(61,214,140,.18);color:var(--green);padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700}
+.bloss{background:rgba(242,95,92,.1);color:var(--red);padding:2px 7px;border-radius:4px;font-size:11px}
+.bcan{background:rgba(107,107,138,.1);color:var(--muted);padding:2px 7px;border-radius:4px;font-size:11px}
+.pills{display:flex;gap:6px;padding:10px 16px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.pill{background:var(--border);color:var(--muted);border:none;padding:4px 12px;border-radius:20px;font-size:11.5px;cursor:pointer;font-family:var(--font);transition:all .2s}
+.pill:hover,.pill.active{background:var(--accent);color:#fff}
+.pill.paper-pill:hover,.pill.paper-pill.active{background:var(--cyan);color:var(--bg)}
+.btn{background:var(--border);color:var(--muted);border:1px solid var(--border);padding:3px 9px;border-radius:4px;font-size:11px;cursor:pointer;font-family:var(--font);transition:all .2s}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn-close{background:rgba(242,95,92,.1);color:var(--red);border:1px solid rgba(242,95,92,.2);padding:3px 9px;border-radius:4px;font-size:11px;cursor:pointer;font-family:var(--font);transition:all .2s}
+.btn-close:hover{background:rgba(242,95,92,.2);border-color:var(--red)}
+canvas{width:100%;display:block}
+.scan-item{padding:12px 16px;border-bottom:1px solid #131320;display:flex;justify-content:space-between;align-items:flex-start}
+.scan-item:last-child{border-bottom:none}
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.chip{background:rgba(124,111,205,.15);color:var(--accent);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.perf-row{display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid #131320}
+.perf-row:last-child{border-bottom:none}
+/* Overview comparison banner */
+.overview-banner{display:flex;gap:16px;margin-bottom:16px}
+.ov-box{flex:1;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;position:relative;overflow:hidden}
+.ov-box.journal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent)}
+.ov-box.paper-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--cyan)}
+.ov-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.ov-label.journal-label{color:var(--accent)}
+.ov-label.paper-label{color:var(--cyan)}
+.ov-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.ov-row:last-child{border-bottom:none}
+.ov-key{font-size:11px;color:var(--muted)}
+.ov-val{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+@media(max-width:700px){.overview-banner{flex-direction:column}}
+/* Modals */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:26px;width:340px;max-width:95vw}
+.modal h3{font-size:15px;margin-bottom:16px}
+.modal label{display:block;color:var(--muted);font-size:11px;margin:12px 0 4px;text-transform:uppercase;letter-spacing:.6px}
+.modal select,.modal input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-size:13px;font-family:var(--font);outline:none}
+.modal select:focus,.modal input:focus{border-color:var(--accent)}
+.mbtns{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
+.bsave{background:var(--accent);color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-family:var(--font);font-weight:600}
+.bsave.cyan{background:var(--cyan);color:var(--bg)}
+.bcancel{background:var(--border);color:var(--muted);border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-family:var(--font)}
+.empty{text-align:center;padding:32px;color:var(--muted)}
+/* Section divider */
+.section-divider{display:flex;align-items:center;gap:10px;margin:20px 0 12px}
+.section-divider span{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);white-space:nowrap}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:16px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><div class="dot"></div>Signal Dashboard</div>
+  <div class="nav-right">
+    <span>Intraday H4/H1/M15</span>
+    <span id="clock">--:--:--</span>
+    <span id="upd">—</span>
+  </div>
+</nav>
+<div class="tabs">
+  <div class="tab active" data-page="overview">Overview</div>
+  <div class="tab" data-page="positions">Positions</div>
+  <div class="tab" data-page="journal">Journal</div>
+  <div class="tab paper" data-page="paper">Paper Trade</div>
+  <div class="tab" data-page="scans">Scan History</div>
+  <div class="tab" data-page="performance">Performance</div>
+</div>
+
+<!-- ════ OVERVIEW ════ -->
+<div id="page-overview" class="page active">
+  <!-- Comparison Banner -->
+  <div class="overview-banner">
+    <div class="ov-box journal-box">
+      <div class="ov-label journal-label">📓 Journal Signal</div>
+      <div class="ov-row"><span class="ov-key">Winrate</span><span class="ov-val" id="ov-j-wr">—</span></div>
+      <div class="ov-row"><span class="ov-key">Total PnL</span><span class="ov-val" id="ov-j-tp">—</span></div>
+      <div class="ov-row"><span class="ov-key">Expectancy</span><span class="ov-val" id="ov-j-ex">—</span></div>
+      <div class="ov-row"><span class="ov-key">Trades Closed</span><span class="ov-val" id="ov-j-cl">—</span></div>
+      <div class="ov-row"><span class="ov-key">Running</span><span class="ov-val" id="ov-j-ru">—</span></div>
+    </div>
+    <div class="ov-box paper-box">
+      <div class="ov-label paper-label">🧪 Paper Trade</div>
+      <div class="ov-row"><span class="ov-key">Winrate</span><span class="ov-val" id="ov-p-wr">—</span></div>
+      <div class="ov-row"><span class="ov-key">Total PnL (USD)</span><span class="ov-val" id="ov-p-tp">—</span></div>
+      <div class="ov-row"><span class="ov-key">Avg PnL</span><span class="ov-val" id="ov-p-ap">—</span></div>
+      <div class="ov-row"><span class="ov-key">Trades Closed</span><span class="ov-val" id="ov-p-cl">—</span></div>
+      <div class="ov-row"><span class="ov-key">Open Positions</span><span class="ov-val" id="ov-p-op">—</span></div>
+    </div>
+  </div>
+
+  <div class="g4">
+    <div class="stat"><div class="sl">Winrate</div><div class="sv g" id="s-wr">—</div><div class="ss" id="s-wl">— W / — L</div></div>
+    <div class="stat"><div class="sl">Total PnL</div><div class="sv" id="s-tp">—</div><div class="ss" id="s-cl">—</div></div>
+    <div class="stat"><div class="sl">Expectancy</div><div class="sv" id="s-ex">—</div><div class="ss">per trade</div></div>
+    <div class="stat"><div class="sl">Running</div><div class="sv ac" id="s-ru">0</div><div class="ss">posisi aktif</div></div>
+    <div class="stat"><div class="sl">Avg Win</div><div class="sv g" id="s-aw">—</div><div class="ss">per winning trade</div></div>
+    <div class="stat"><div class="sl">Avg Loss</div><div class="sv r" id="s-al">—</div><div class="ss">per losing trade</div></div>
+    <div class="stat"><div class="sl">Profit Factor</div><div class="sv" id="s-pf">—</div><div class="ss">gross win/loss</div></div>
+    <div class="stat"><div class="sl">Best Streak</div><div class="sv a" id="s-ms">—</div><div class="ss" id="s-cs">current —</div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><span class="ct">Journal Equity Curve</span><span id="eq-n" style="font-size:11px;color:var(--muted)"></span></div>
+      <div style="padding:12px 16px"><canvas id="equity-canvas" height="180"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ch"><span class="ct">Symbol Leaders (Journal)</span></div>
+      <div id="sym-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ POSITIONS (Journal Running) ════ -->
+<div id="page-positions" class="page">
+  <div class="card">
+    <div class="ch"><span class="ct">Running Positions (Journal)</span><span id="pc" class="brun">0</span></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>#</th><th>Symbol</th><th>Bias</th><th>Entry</th><th>Live</th><th>PnL%</th><th>SL</th><th>TP1</th><th>TP2</th><th>RR</th><th>Opened</th><th>Action</th></tr></thead>
+      <tbody id="pos-body"><tr><td colspan="12" class="empty">Tidak ada posisi aktif</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ════ JOURNAL ════ -->
+<div id="page-journal" class="page">
+  <div class="card">
+    <div class="ch"><span class="ct">Trade Journal</span><span id="jc" style="font-size:11px;color:var(--muted)">0</span></div>
+    <div class="pills">
+      <button class="pill active" onclick="setF('ALL',this)">Semua</button>
+      <button class="pill" onclick="setF('RUNNING',this)">Running</button>
+      <button class="pill" onclick="setF('WIN',this)">Win</button>
+      <button class="pill" onclick="setF('LOSS',this)">Loss</button>
+      <button class="pill" onclick="setF('LONG',this)">Long</button>
+      <button class="pill" onclick="setF('SHORT',this)">Short</button>
+    </div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>#</th><th>Waktu</th><th>Symbol</th><th>Dir</th><th>Entry</th><th>SL</th><th>TP1</th><th>TP2</th><th>SL%</th><th>RR</th><th>Score</th><th>Status</th><th>Exit</th><th>PnL%</th><th>Act</th></tr></thead>
+      <tbody id="jnl-body"><tr><td colspan="15" class="empty">Memuat...</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ════ PAPER TRADE ════ -->
+<div id="page-paper" class="page">
+  <!-- Paper Stats -->
+  <div class="g4">
+    <div class="stat paper-stat"><div class="sl">Paper Winrate</div><div class="sv cy" id="pt-wr">—</div><div class="ss" id="pt-wl">— W / — L</div></div>
+    <div class="stat paper-stat"><div class="sl">Total PnL (USD)</div><div class="sv" id="pt-tp">—</div><div class="ss" id="pt-tc">—</div></div>
+    <div class="stat paper-stat"><div class="sl">Avg PnL %</div><div class="sv" id="pt-ap">—</div><div class="ss">per trade</div></div>
+    <div class="stat paper-stat"><div class="sl">Open Positions</div><div class="sv cy" id="pt-op">0</div><div class="ss">posisi terbuka</div></div>
+  </div>
+
+  <div class="g2">
+    <div class="card paper-card">
+      <div class="ch"><span class="ct paper-title">Paper Equity Curve (USD)</span><span id="peq-n" style="font-size:11px;color:var(--cyan)"></span></div>
+      <div style="padding:12px 16px"><canvas id="paper-equity-canvas" height="180"></canvas></div>
+    </div>
+    <div class="card paper-card">
+      <div class="ch"><span class="ct paper-title">Symbol Leaders (Paper)</span></div>
+      <div id="paper-sym-list"></div>
+    </div>
+  </div>
+
+  <!-- Open Positions -->
+  <div class="section-divider"><span>🟢 Open Positions</span></div>
+  <div class="card paper-card">
+    <div class="ch"><span class="ct paper-title">Open Paper Positions</span><span id="pop-count" class="bopen">0</span></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>#</th><th>Symbol</th><th>Dir</th><th>Entry</th><th>Live</th><th>Unreal PnL%</th><th>Unreal USD</th><th>SL</th><th>TP1</th><th>TP2</th><th>Size $</th><th>Opened</th><th>Action</th></tr></thead>
+      <tbody id="paper-open-body"><tr><td colspan="13" class="empty">Tidak ada open position</td></tr></tbody>
+    </table></div>
+  </div>
+
+  <!-- Closed Positions -->
+  <div class="section-divider"><span>🔴 Closed Positions</span></div>
+  <div class="card paper-card">
+    <div class="ch">
+      <span class="ct paper-title">Closed Paper Positions</span>
+      <div style="display:flex;gap:6px">
+        <button class="pill paper-pill active" style="font-size:11px;padding:3px 10px" onclick="setPaperF('ALL',this)">Semua</button>
+        <button class="pill paper-pill" style="font-size:11px;padding:3px 10px" onclick="setPaperF('WIN',this)">Win</button>
+        <button class="pill paper-pill" style="font-size:11px;padding:3px 10px" onclick="setPaperF('LOSS',this)">Loss</button>
+        <button class="pill paper-pill" style="font-size:11px;padding:3px 10px" onclick="setPaperF('LONG',this)">Long</button>
+        <button class="pill paper-pill" style="font-size:11px;padding:3px 10px" onclick="setPaperF('SHORT',this)">Short</button>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>#</th><th>Symbol</th><th>Dir</th><th>Entry</th><th>Exit</th><th>PnL%</th><th>PnL USD</th><th>Size $</th><th>Status</th><th>Closed</th></tr></thead>
+      <tbody id="paper-closed-body"><tr><td colspan="10" class="empty">Belum ada closed position</td></tr></tbody>
+    </table></div>
+  </div>
+
+  <!-- Paper Performance -->
+  <div class="card paper-card">
+    <div class="ch"><span class="ct paper-title">Performance per Symbol (Paper)</span></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Symbol</th><th>Total</th><th>Win</th><th>Loss</th><th>WR%</th><th>Avg PnL%</th><th>Total PnL $</th></tr></thead>
+      <tbody id="paper-perf-body"><tr><td colspan="7" class="empty">Belum ada data</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ════ SCAN HISTORY ════ -->
+<div id="page-scans" class="page">
+  <div class="card">
+    <div class="ch"><span class="ct">Scan History</span></div>
+    <div id="scan-list"><div class="empty">Belum ada scan</div></div>
+  </div>
+</div>
+
+<!-- ════ PERFORMANCE (Journal) ════ -->
+<div id="page-performance" class="page">
+  <div class="card">
+    <div class="ch"><span class="ct">Performance per Symbol (Journal)</span></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Symbol</th><th>Total</th><th>Win</th><th>Loss</th><th>WR%</th><th>Avg PnL</th><th>Total PnL</th></tr></thead>
+      <tbody id="perf-body"><tr><td colspan="7" class="empty">Belum ada data</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ════ MODAL: Update Journal Signal ════ -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <h3>Update Signal #<span id="m-disp"></span></h3>
+    <input type="hidden" id="m-id">
+    <label>Status</label>
+    <select id="m-st">
+      <option value="WIN_TP1">WIN TP1</option><option value="WIN_TP2">WIN TP2</option>
+      <option value="WIN_TP3">WIN TP3</option><option value="LOSS">LOSS</option>
+      <option value="CANCELLED">Cancelled</option>
+    </select>
+    <label>Exit Price</label><input type="number" id="m-ep" step="any" placeholder="0.00000">
+    <label>Catatan</label><input type="text" id="m-nt" placeholder="...">
+    <div class="mbtns">
+      <button class="bcancel" onclick="closeM()">Batal</button>
+      <button class="bsave" onclick="saveM()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: Close Paper Position ════ -->
+<div class="overlay" id="paper-modal">
+  <div class="modal">
+    <h3>🧪 Close Paper Position #<span id="pm-disp"></span></h3>
+    <div id="pm-info" style="font-size:11px;color:var(--muted);margin-bottom:4px"></div>
+    <input type="hidden" id="pm-id">
+    <label>Exit Price</label><input type="number" id="pm-ep" step="any" placeholder="0.00000">
+    <div class="mbtns">
+      <button class="bcancel" onclick="closePM()">Batal</button>
+      <button class="bsave cyan" onclick="savePM()">Close Position</button>
+    </div>
+  </div>
+</div>
+
+<footer>Signal Dashboard · 15s refresh · Journal + Paper Trade integrated</footer>
+
+<script>
+let allSigs=[], prices={}, jFilter='ALL';
+let allPaperClosed=[], paperFilter='ALL', paperPrices={};
+
+// Clock
+setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('id-ID',{hour12:false})},1000);
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  this.classList.add('active');
+  document.getElementById('page-'+this.dataset.page).classList.add('active');
+}));
+
+// ── Main Fetch ────────────────────────────────────────────────────────────────
+async function fetchAll(){
+  try{
+    const [stats, sigs, run, scans, eq, perf, px,
+           pStats, pOpen, pClosed, pPerf, pEq, pPx] = await Promise.all([
+      fetch('/api/stats').then(r=>r.json()),
+      fetch('/api/signals?limit=200').then(r=>r.json()),
+      fetch('/api/running').then(r=>r.json()),
+      fetch('/api/scans').then(r=>r.json()),
+      fetch('/api/equity').then(r=>r.json()),
+      fetch('/api/performance').then(r=>r.json()),
+      fetch('/api/prices').then(r=>r.json()),
+      // Paper Trade
+      fetch('/api/paper/stats').then(r=>r.json()),
+      fetch('/api/paper/open').then(r=>r.json()),
+      fetch('/api/paper/closed?limit=200').then(r=>r.json()),
+      fetch('/api/paper/performance').then(r=>r.json()),
+      fetch('/api/paper/equity').then(r=>r.json()),
+      fetch('/api/paper/prices').then(r=>r.json()),
+    ]);
+
+    prices=px; allSigs=sigs;
+    paperPrices=pPx; allPaperClosed=pClosed;
+
+    // Journal
+    rStats(stats); rPos(run,px); rJnl(allSigs);
+    rScans(scans); rEquity(eq, 'equity-canvas', false); rSymList(perf); rPerfTable(perf);
+
+    // Overview comparison
+    rOvJournal(stats); rOvPaper(pStats);
+
+    // Paper Trade
+    rPaperStats(pStats);
+    rPaperOpen(pOpen, pPx);
+    rPaperClosed(allPaperClosed);
+    rPaperPerf(pPerf);
+    rEquity(pEq, 'paper-equity-canvas', true);
+    rPaperSymList(pPerf);
+
+    document.getElementById('upd').textContent='↻ '+new Date().toLocaleTimeString('id-ID',{hour12:false});
+  }catch(e){console.error(e)}
+}
+
+// ── Overview Comparison ───────────────────────────────────────────────────────
+function rOvJournal(s){
+  const wr=s.winrate_pct||0, tp=s.total_pnl_pct||0, ex=s.expectancy||0;
+  document.getElementById('ov-j-wr').textContent=wr+'%';
+  document.getElementById('ov-j-wr').className='ov-val '+(wr>=50?'g':'r');
+  document.getElementById('ov-j-tp').textContent=(tp>=0?'+':'')+tp+'%';
+  document.getElementById('ov-j-tp').className='ov-val '+(tp>=0?'g':'r');
+  document.getElementById('ov-j-ex').textContent=(ex>=0?'+':'')+ex+'%';
+  document.getElementById('ov-j-ex').className='ov-val '+(ex>=0?'g':'r');
+  document.getElementById('ov-j-cl').textContent=(s.total_closed||0)+' trades';
+  document.getElementById('ov-j-ru').textContent=(s.running_positions||0)+' aktif';
+}
+function rOvPaper(s){
+  const wr=s.winrate||0, tp=s.total_pnl_usd||0, ap=s.avg_pnl||0;
+  document.getElementById('ov-p-wr').textContent=wr+'%';
+  document.getElementById('ov-p-wr').className='ov-val '+(wr>=50?'g':'r');
+  document.getElementById('ov-p-tp').textContent='$'+(tp>=0?'+':'')+tp;
+  document.getElementById('ov-p-tp').className='ov-val '+(tp>=0?'g':'r');
+  document.getElementById('ov-p-ap').textContent=(ap>=0?'+':'')+ap+'%';
+  document.getElementById('ov-p-ap').className='ov-val '+(ap>=0?'g':'r');
+  document.getElementById('ov-p-cl').textContent=(s.total||0)+' trades';
+  document.getElementById('ov-p-op').textContent=(s.open||0)+' posisi';
+}
+
+// ── Journal Stats ─────────────────────────────────────────────────────────────
+function rStats(s){
+  const wr=s.winrate_pct||0,tp=s.total_pnl_pct||0,ex=s.expectancy||0;
+  set('s-wr',wr+'%',wr>=50?'g':'r');
+  set('s-tp',(tp>=0?'+':'')+tp+'%',tp>=0?'g':'r');
+  set('s-ex',(ex>=0?'+':'')+ex+'%',ex>=0?'g':'r');
+  set('s-ru',s.running_positions||0,'ac');
+  set('s-aw','+'+(s.avg_win_pct||0)+'%','g');
+  set('s-al',(s.avg_loss_pct||0)+'%','r');
+  set('s-pf',s.profit_factor||0,(s.profit_factor||0)>=1?'g':'r');
+  set('s-ms',s.max_streak||0,'a');
+  txt('s-wl',(s.wins||0)+' W / '+(s.losses||0)+' L');
+  txt('s-cl',(s.total_closed||0)+' closed');
+  txt('s-cs','current '+(s.current_streak||0));
+}
+function set(id,v,cls){const e=document.getElementById(id);e.textContent=v;e.className='sv '+(cls||'')}
+function txt(id,v){const e=document.getElementById(id);if(e)e.textContent=v}
+
+// ── Journal Positions ─────────────────────────────────────────────────────────
+function rPos(rows,px){
+  txt('pc',rows.length);
+  const tb=document.getElementById('pos-body');
+  if(!rows.length){tb.innerHTML='<tr><td colspan="12" class="empty">Tidak ada posisi aktif</td></tr>';return}
+  tb.innerHTML=rows.map(r=>{
+    const lv=px[r.symbol],lp=lv?'$'+fmt(lv.price):'—';
+    const pnl=lv?lv.pnl_pct:null;
+    const ps=pnl!=null?`<span class="${pnl>=0?'g':'r'}">${pnl>=0?'+':''}${pnl}%</span>`:'—';
+    return `<tr><td style="color:var(--muted)">#${r.id}</td><td><b>${r.symbol}</b></td>
+    <td>${badge(r.bias)}</td><td>$${fmt(r.entry)}</td>
+    <td style="color:var(--accent2)">${lp}</td><td>${ps}</td>
+    <td style="color:var(--red)">$${fmt(r.sl)}</td>
+    <td>$${fmt(r.tp1)}</td><td style="color:var(--green)">$${fmt(r.tp2)}</td>
+    <td><span class="brun">${r.rr}</span></td>
+    <td style="color:var(--muted);font-size:11px">${fd(r.ts)}</td>
+    <td><button class="btn" onclick="openM(${r.id})">Update</button></td></tr>`;
+  }).join('');
+}
+
+// ── Journal Filter ────────────────────────────────────────────────────────────
+function setF(f,el){
+  jFilter=f;
+  document.querySelectorAll('.pill:not(.paper-pill)').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  rJnl(allSigs);
+}
+function rJnl(rows){
+  let f=rows;
+  if(jFilter==='RUNNING')f=rows.filter(r=>r.status==='RUNNING');
+  else if(jFilter==='WIN')f=rows.filter(r=>r.status&&r.status.startsWith('WIN'));
+  else if(jFilter==='LOSS')f=rows.filter(r=>r.status==='LOSS');
+  else if(jFilter==='LONG')f=rows.filter(r=>r.bias&&r.bias.includes('LONG'));
+  else if(jFilter==='SHORT')f=rows.filter(r=>r.bias&&r.bias.includes('SHORT'));
+  txt('jc',f.length+' sinyal');
+  const tb=document.getElementById('jnl-body');
+  if(!f.length){tb.innerHTML='<tr><td colspan="15" class="empty">Tidak ada data</td></tr>';return}
+  tb.innerHTML=f.map(r=>{
+    const sb=r.status==='RUNNING'?'<span class="brun">Running</span>':
+      r.status&&r.status.startsWith('WIN')?`<span class="bw">${r.status.replace('WIN_','')}</span>`:
+      r.status==='LOSS'?'<span class="bloss">Loss</span>':'<span class="bcan">—</span>';
+    const pnl=r.pnl_pct!=null?`<span class="${r.pnl_pct>=0?'g':'r'}">${r.pnl_pct>=0?'+':''}${r.pnl_pct}%</span>`:'—';
+    const act=r.status==='RUNNING'?`<button class="btn" onclick="openM(${r.id})">Update</button>`:'—';
+    const sm=(r.confidence||'').match(/(\d+)\/12/);
+    return `<tr><td style="color:var(--muted)">#${r.id}</td>
+    <td style="color:var(--muted);font-size:11px;white-space:nowrap">${fd(r.ts)}</td>
+    <td><b>${r.symbol}</b></td><td>${badge(r.bias)}</td>
+    <td>$${fmt(r.entry)}</td><td style="color:var(--red)">$${fmt(r.sl)}</td>
+    <td>$${fmt(r.tp1)}</td><td style="color:var(--green)">$${fmt(r.tp2)}</td>
+    <td>${r.sl_pct}%</td><td>${r.rr}</td>
+    <td>${sm?sm[1]+'/12':'—'}</td>
+    <td>${sb}</td><td>${r.exit_price?'$'+fmt(r.exit_price):'—'}</td>
+    <td>${pnl}</td><td>${act}</td></tr>`;
+  }).join('');
+}
+
+// ── Scan History ──────────────────────────────────────────────────────────────
+function rScans(scans){
+  const el=document.getElementById('scan-list');
+  if(!scans.length){el.innerHTML='<div class="empty">Belum ada scan</div>';return}
+  el.innerHTML=scans.map(s=>{
+    const chips=(s.top_symbols||[]).map(sym=>`<span class="chip">${sym}</span>`).join('');
+    return `<div class="scan-item">
+      <div><div style="font-weight:600">${fd(s.ts)}</div>
+      <div style="color:var(--muted);font-size:11px;margin-top:2px">${s.total_scanned} koin · <span class="g">${s.signals_found} sinyal</span></div>
+      <div class="chips">${chips||'<span style="color:var(--muted);font-size:11px">no signal</span>'}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ── Equity Curve (shared for Journal & Paper) ─────────────────────────────────
+function rEquity(data, canvasId, isPaper){
+  const cv=document.getElementById(canvasId);
+  if(!cv)return;
+  const ctx=cv.getContext('2d');
+  const W=cv.offsetWidth||500,H=180;
+  cv.width=W;cv.height=H;ctx.clearRect(0,0,W,H);
+  const countId = isPaper?'peq-n':'eq-n';
+  if(!data||!data.length){
+    ctx.fillStyle='#6b6b8a';ctx.font='13px Inter';ctx.textAlign='center';
+    ctx.fillText('Belum ada data equity',W/2,H/2);return;
+  }
+  txt(countId, data.length+' trades');
+  const vals=data.map(d=>d.cumulative);
+  const mn=Math.min(0,...vals),mx=Math.max(...vals,0.01);
+  const pad=20,pw=W-pad*2,ph=H-pad*2;
+  const tx=i=>(i/(data.length-1||1))*pw+pad;
+  const ty=v=>ph-(((v-mn)/(mx-mn||1))*ph)+pad;
+  // Zero line
+  ctx.strokeStyle='rgba(255,255,255,.07)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pad,ty(0));ctx.lineTo(W-pad,ty(0));ctx.stroke();
+  // Fill
+  const lineColor = isPaper?'#22d3ee':'#3dd68c';
+  const gr=ctx.createLinearGradient(0,pad,0,H-pad);
+  gr.addColorStop(0,isPaper?'rgba(34,211,238,.22)':'rgba(61,214,140,.22)');
+  gr.addColorStop(1,isPaper?'rgba(34,211,238,.02)':'rgba(61,214,140,.02)');
+  ctx.beginPath();ctx.moveTo(tx(0),ty(vals[0]));
+  data.forEach((d,i)=>ctx.lineTo(tx(i),ty(d.cumulative)));
+  ctx.lineTo(tx(data.length-1),H-pad);ctx.lineTo(pad,H-pad);ctx.closePath();
+  ctx.fillStyle=gr;ctx.fill();
+  // Line
+  ctx.strokeStyle=lineColor;ctx.lineWidth=2;ctx.lineJoin='round';
+  ctx.beginPath();data.forEach((d,i)=>i===0?ctx.moveTo(tx(i),ty(d.cumulative)):ctx.lineTo(tx(i),ty(d.cumulative)));
+  ctx.stroke();
+  // Loss dots
+  data.forEach((d,i)=>{if(!d.win){ctx.beginPath();ctx.arc(tx(i),ty(d.cumulative),3,0,Math.PI*2);ctx.fillStyle='#f25f5c';ctx.fill()}});
+  // Last value label
+  const last=vals[vals.length-1];
+  ctx.fillStyle=last>=0?lineColor:'#f25f5c';ctx.font='bold 12px Inter';ctx.textAlign='right';
+  const label = isPaper ? '$'+(last>=0?'+':'')+last : (last>=0?'+':'')+last+'%';
+  ctx.fillText(label,W-pad,pad+13);
+}
+
+// ── Journal Symbol Leaders ────────────────────────────────────────────────────
+function rSymList(data){
+  const el=document.getElementById('sym-list');
+  if(!data||!data.length){el.innerHTML='<div class="empty">Belum ada data</div>';return}
+  const mx=Math.max(...data.map(d=>Math.abs(d.total_pnl||0)),1);
+  el.innerHTML=data.slice(0,8).map(d=>{
+    const pos=d.total_pnl>=0,w=Math.round(Math.abs(d.total_pnl)/mx*100);
+    const wr=d.total>0?Math.round(d.wins/d.total*100):0;
+    return `<div class="perf-row">
+      <span style="font-weight:700;width:55px">${d.symbol}</span>
+      <div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${w}%;background:${pos?'var(--green)':'var(--red)'};border-radius:3px"></div>
+      </div>
+      <span style="width:60px;text-align:right;font-size:12px;color:${pos?'var(--green)':'var(--red)'}">${pos?'+':''}${d.total_pnl}%</span>
+      <span style="color:var(--muted);font-size:11px;width:35px;text-align:right">${wr}%</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Journal Performance Table ─────────────────────────────────────────────────
+function rPerfTable(data){
+  const tb=document.getElementById('perf-body');
+  if(!data||!data.length){tb.innerHTML='<tr><td colspan="7" class="empty">Belum ada data</td></tr>';return}
+  tb.innerHTML=data.map(d=>{
+    const wr=d.total>0?Math.round(d.wins/d.total*100):0;
+    const ap=d.avg_pnl||0,tp=d.total_pnl||0;
+    return `<tr><td><b>${d.symbol}</b></td><td>${d.total}</td>
+    <td class="g">${d.wins}</td><td class="r">${d.losses}</td>
+    <td class="${wr>=50?'g':'r'}">${wr}%</td>
+    <td class="${ap>=0?'g':'r'}">${ap>=0?'+':''}${ap}%</td>
+    <td class="${tp>=0?'g':'r'}">${tp>=0?'+':''}${tp}%</td></tr>`;
+  }).join('');
+}
+
+// ── Paper Trade Stats ─────────────────────────────────────────────────────────
+function rPaperStats(s){
+  const wr=s.winrate||0,tp=s.total_pnl_usd||0,ap=s.avg_pnl||0;
+  document.getElementById('pt-wr').textContent=wr+'%';
+  document.getElementById('pt-wr').className='sv '+(wr>=50?'g':'r');
+  document.getElementById('pt-tp').textContent='$'+(tp>=0?'+':'')+tp;
+  document.getElementById('pt-tp').className='sv '+(tp>=0?'g':'r');
+  document.getElementById('pt-ap').textContent=(ap>=0?'+':'')+ap+'%';
+  document.getElementById('pt-ap').className='sv '+(ap>=0?'g':'r');
+  document.getElementById('pt-op').textContent=s.open||0;
+  txt('pt-wl',(s.wins||0)+' W / '+(s.losses||0)+' L');
+  txt('pt-tc',(s.total||0)+' closed trades');
+}
+
+// ── Paper Open Positions ──────────────────────────────────────────────────────
+function rPaperOpen(rows, px){
+  txt('pop-count', rows.length);
+  const tb=document.getElementById('paper-open-body');
+  if(!rows.length){tb.innerHTML='<tr><td colspan="13" class="empty">Tidak ada open position</td></tr>';return}
+  tb.innerHTML=rows.map(r=>{
+    const lv=px[r.symbol];
+    const lp=lv?'$'+fmt(lv.price):'—';
+    const upct=lv!=null?`<span class="${lv.pnl_pct>=0?'g':'r'}">${lv.pnl_pct>=0?'+':''}${lv.pnl_pct}%</span>`:'—';
+    const uusd=lv!=null?`<span class="${lv.pnl_usd>=0?'g':'r'}">${lv.pnl_usd>=0?'+':''}$${lv.pnl_usd}</span>`:'—';
+    return `<tr>
+      <td style="color:var(--muted)">#${r.id}</td>
+      <td><b>${r.symbol}</b></td>
+      <td>${badgeDir(r.direction)}</td>
+      <td>$${fmt(r.entry_price)}</td>
+      <td style="color:var(--cyan)">${lp}</td>
+      <td>${upct}</td>
+      <td>${uusd}</td>
+      <td style="color:var(--red)">$${fmt(r.sl_price)}</td>
+      <td>$${fmt(r.tp1_price)}</td>
+      <td style="color:var(--green)">$${fmt(r.tp2_price)}</td>
+      <td>$${fmtUsd(r.position_usd)}</td>
+      <td style="color:var(--muted);font-size:11px">${fd(r.opened_at)}</td>
+      <td><button class="btn-close" onclick="openPM(${r.id},'${r.symbol}','${r.direction}',${r.entry_price})">Close</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Paper Closed Filter ───────────────────────────────────────────────────────
+function setPaperF(f,el){
+  paperFilter=f;
+  document.querySelectorAll('.paper-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  rPaperClosed(allPaperClosed);
+}
+function rPaperClosed(rows){
+  let f=rows;
+  if(paperFilter==='WIN')f=rows.filter(r=>r.status&&r.status.startsWith('WIN'));
+  else if(paperFilter==='LOSS')f=rows.filter(r=>r.status==='LOSS_SL');
+  else if(paperFilter==='LONG')f=rows.filter(r=>r.direction==='LONG');
+  else if(paperFilter==='SHORT')f=rows.filter(r=>r.direction==='SHORT');
+  const tb=document.getElementById('paper-closed-body');
+  if(!f.length){tb.innerHTML='<tr><td colspan="10" class="empty">Belum ada closed position</td></tr>';return}
+  tb.innerHTML=f.map(r=>{
+    const pnl=r.pnl_pct||0, pusd=r.pnl_usd||0;
+    const sb=r.status&&r.status.startsWith('WIN')?
+      `<span class="bw2">${r.status.replace('WIN_','TP')}</span>`:
+      r.status==='LOSS_SL'?'<span class="bloss">SL Hit</span>':
+      `<span class="bcan">${r.status||'—'}</span>`;
+    return `<tr>
+      <td style="color:var(--muted)">#${r.id}</td>
+      <td><b>${r.symbol}</b></td>
+      <td>${badgeDir(r.direction)}</td>
+      <td>$${fmt(r.entry_price)}</td>
+      <td>$${fmt(r.exit_price)}</td>
+      <td class="${pnl>=0?'g':'r'}">${pnl>=0?'+':''}${pnl}%</td>
+      <td class="${pusd>=0?'g':'r'}">${pusd>=0?'+':''}$${fmtUsd(pusd)}</td>
+      <td>$${fmtUsd(r.position_usd)}</td>
+      <td>${sb}</td>
+      <td style="color:var(--muted);font-size:11px">${fd(r.closed_at)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Paper Performance ─────────────────────────────────────────────────────────
+function rPaperPerf(data){
+  const tb=document.getElementById('paper-perf-body');
+  if(!data||!data.length){tb.innerHTML='<tr><td colspan="7" class="empty">Belum ada data</td></tr>';return}
+  tb.innerHTML=data.map(d=>{
+    const wr=d.total>0?Math.round(d.wins/d.total*100):0;
+    const ap=d.avg_pnl||0,tp=d.total_pnl||0;
+    return `<tr>
+      <td><b>${d.symbol}</b></td><td>${d.total}</td>
+      <td class="g">${d.wins}</td><td class="r">${d.losses}</td>
+      <td class="${wr>=50?'g':'r'}">${wr}%</td>
+      <td class="${ap>=0?'g':'r'}">${ap>=0?'+':''}${ap}%</td>
+      <td class="${tp>=0?'g':'r'}">${tp>=0?'+':''}$${fmtUsd(tp)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Paper Symbol Leaders ──────────────────────────────────────────────────────
+function rPaperSymList(data){
+  const el=document.getElementById('paper-sym-list');
+  if(!data||!data.length){el.innerHTML='<div class="empty">Belum ada data</div>';return}
+  const mx=Math.max(...data.map(d=>Math.abs(d.total_pnl||0)),1);
+  el.innerHTML=data.slice(0,8).map(d=>{
+    const pos=d.total_pnl>=0,w=Math.round(Math.abs(d.total_pnl)/mx*100);
+    const wr=d.total>0?Math.round(d.wins/d.total*100):0;
+    return `<div class="perf-row">
+      <span style="font-weight:700;width:55px">${d.symbol}</span>
+      <div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${w}%;background:${pos?'var(--cyan)':'var(--red)'};border-radius:3px"></div>
+      </div>
+      <span style="width:70px;text-align:right;font-size:12px;color:${pos?'var(--cyan)':'var(--red)'}">${pos?'+':''}$${fmtUsd(d.total_pnl)}</span>
+      <span style="color:var(--muted);font-size:11px;width:35px;text-align:right">${wr}%</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Modal: Journal Update ─────────────────────────────────────────────────────
+function openM(id){
+  document.getElementById('m-id').value=id;
+  document.getElementById('m-disp').textContent=id;
+  document.getElementById('m-ep').value='';
+  document.getElementById('m-nt').value='';
+  document.getElementById('modal').classList.add('open');
+}
+function closeM(){document.getElementById('modal').classList.remove('open')}
+async function saveM(){
+  const id=document.getElementById('m-id').value;
+  const st=document.getElementById('m-st').value;
+  const ep=document.getElementById('m-ep').value;
+  const nt=document.getElementById('m-nt').value;
+  await fetch('/api/update',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:parseInt(id),status:st,exit_price:ep?parseFloat(ep):null,notes:nt})});
+  closeM();fetchAll();
+}
+
+// ── Modal: Paper Close ────────────────────────────────────────────────────────
+function openPM(id, symbol, direction, entry){
+  document.getElementById('pm-id').value=id;
+  document.getElementById('pm-disp').textContent=id;
+  document.getElementById('pm-info').textContent=`${symbol} ${direction} @ $${fmt(entry)}`;
+  document.getElementById('pm-ep').value='';
+  // Pre-fill with live price if available
+  if(paperPrices[symbol]){
+    document.getElementById('pm-ep').value=paperPrices[symbol].price;
+  }
+  document.getElementById('paper-modal').classList.add('open');
+}
+function closePM(){document.getElementById('paper-modal').classList.remove('open')}
+async function savePM(){
+  const id=document.getElementById('pm-id').value;
+  const ep=document.getElementById('pm-ep').value;
+  if(!ep){alert('Masukkan exit price');return}
+  const res=await fetch('/api/paper/close',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:parseInt(id),exit_price:parseFloat(ep)})});
+  const data=await res.json();
+  closePM();
+  if(data.ok){
+    const pnl=data.pnl_usd||0;
+    alert(`Position closed!\nPnL: ${pnl>=0?'+':''}$${pnl} (${data.pnl_pct}%)`);
+  }else{
+    alert('Error: '+(data.error||'Unknown'));
+  }
+  fetchAll();
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function badge(b){return b&&b.includes('LONG')?'<span class="bl">L</span>':'<span class="bs">S</span>'}
+function badgeDir(d){return d==='LONG'?'<span class="bl">LONG</span>':'<span class="bs">SHORT</span>'}
+function fmt(n){
+  if(n==null||n===0)return '—';
+  const v=Number(n);
+  if(v>=10000)return v.toLocaleString('id-ID',{maximumFractionDigits:2});
+  if(v>=1)return v.toFixed(4);
+  return v.toFixed(6);
+}
+function fmtUsd(n){
+  if(n==null)return '—';
+  const v=Number(n);
+  return Math.abs(v)>=1000?v.toLocaleString('id-ID',{maximumFractionDigits:2}):v.toFixed(2);
+}
+function fd(ts){
+  if(!ts)return '—';
+  try{const d=new Date(ts);return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',hour12:false})}
+  catch(e){return(ts||'').slice(0,16)}
+}
+
+// Boot
+fetchAll();
+setInterval(fetchAll,15000);
+</script>
+</body>
+</html>
